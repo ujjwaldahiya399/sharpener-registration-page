@@ -8,15 +8,15 @@
 </head>
 <body>
     <div class="container">
-        <form action="" method="post">
+        <form id="userForm">
             <h2>Appointment Booking App</h2>
             <input type="text" name="name" placeholder="name" id="name" />
             <input type="email" name="email" placeholder="email" id="email" />
-            <input type="submit" value="submit" />
+            <button onclick="handleFormSubmit(event)" type="submit">Submit</button>
 
          </form>
          <div class="body">
-            <ul class="list">
+            <ul id="userList">
                 
             </ul>
          </div>

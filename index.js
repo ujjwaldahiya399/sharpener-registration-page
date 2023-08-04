@@ -1,45 +1,132 @@
-let nameInput = document.getElementById("name")
-var namee = ""
-nameInput.addEventListener("keypress", function(e) {
-    namee = e.target.value;
-})
-
-let emailInput = document.getElementById("email")
-var email = "";
-emailInput.addEventListener("keypress", function(e) {
-    email = e.target.value;
-})
-
-console.log("dwfw");
-let form = document.querySelector("form");
-form.onsubmit = function(e) {
-    e.preventDefault();
-    console.log(namee, email);
-    console.log("submit");
-    let name = document.getElementById("name").value;
-    let url = "https://crudcrud.com/api/e00755a28ff54a07aae0f7c4aa7d771d/posts";
-    if (namee !=="" && email !== "") {
-        axios.post(url,
-            {
-                "name":namee,
-                "email":email
-            }
-        )
-        showData();
-    } else {
-        alert("Please enter a name and email");
+// 
+// Function to fetch user data using Axios
+function fetchUserDetails() {
+    return axios.get(' https://crudcrud.com/api/e00755a28ff54a07aae0f7c4aa7d771d/posts') // Replace '/api/users' with your backend API endpoint to fetch user details
+      .then(response => response.data)
+      .catch(error => {
+        console.error('Error fetching user details:', error);
+        return [];
+      });
+  }
+  
+  // Function to add a new user using Axios
+  function addUser(name) {
+    return axios.post('https://crudcrud.com/api/e00755a28ff54a07aae0f7c4aa7d771d/posts', { name }) // Replace '/api/users' with your backend API endpoint to add a new user
+      .then(response => response.data)
+      .catch(error => {
+        console.error('Error adding user:', error);
+        return null;
+      });
+  }
+  
+  // Function to delete a user by backend ID using Axios
+  function deleteUser(backendUserId) {
+    console.log(backendUserId); 
+    return axios.delete(`https://crudcrud.com/api/e00755a28ff54a07aae0f7c4aa7d771d/posts/${backendUserId}`) // Replace '/api/users' with your backend API endpoint to delete a user by backend ID
+      .then(response => response.data)
+      .catch(error => {
+        console.error('Error deleting user:', error);
+        return null;
+      });
+  }
+  
+  // Function to remove user from the UI
+  function removeFromUI(frontendUserId) {
+    const userElement = document.querySelector(`[data-frontend-id="${frontendUserId}"]`);
+    if (userElement) {
+      userElement.remove(); // Remove the user element from the DOM
     }
-    
-}
-let showData = async() =>{
-    let url = "https://crudcrud.com/api/e00755a28ff54a07aae0f7c4aa7d771d/posts";
-    const someData = await axios.get(url).then((res) => res.data);
-    console.log(someData);
-    let ul = document.querySelector("ul");
-    ul.innerHTML = ""
-    someData.forEach(element => {
-        let li = document.createElement("li");
-        li.textContent = `${element.name} - ${element.email}`;
-        ul.appendChild(li);
+  }
+  
+  // Function to populate the DOM with user details
+  function populateUserList(users) {
+    const userList = document.getElementById('userList');
+    userList.innerHTML = ''; // Clear any existing user details
+  
+    users.forEach(user => {
+      const li = document.createElement('li');
+      const frontendUserId = user._id; // Assuming frontend ID is the same as the '_id' from the backend
+  
+      // Set a 'data' attribute to store the frontend ID in the HTML element
+      li.setAttribute('data-frontend-id', frontendUserId);
+  
+      li.textContent = user.name; // Assuming your user object contains a 'name' property
+  
+      // Add a delete button to each user detail
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.addEventListener('click', () => onDeleteClick(frontendUserId)); // Pass frontendUserId as the userId parameter
+  
+      li.appendChild(deleteButton);
+      userList.appendChild(li);
     });
-}
+  }
+  
+  // Function to handle form submission
+  function handleFormSubmit(event) {
+    event.preventDefault();
+    // const form = event.target;
+    // const nameInput = form.querySelector('#name');
+  
+    // Get the user input from the form
+    const name = document.getElementById("name").value;
+  
+    if (name) {
+      // Save the user using the addUser function
+      addUser(name)
+        .then(response => {
+          if (response) {
+            // Fetch all users again after successful addition
+            fetchUserDetails()
+              .then(users => {
+                // Update the UI with the latest user details
+                populateUserList(users);
+                // Clear the form input field after successful submission
+                nameInput.value = '';
+              })
+              .catch(error => {
+                console.error('Error:', error);
+              });
+          }
+        })
+        .catch(error => {
+          console.error('Error adding user:', error);
+        });
+    }
+  }
+  
+  // Function to handle delete button click event
+  function onDeleteClick(frontendUserId) {
+    // Get the backend ID from the frontend ID (You may need to implement your mapping logic)
+    const backendUserId = frontendUserId;
+  
+    // Perform the DELETE request and update the UI on successful deletion
+    deleteUser(backendUserId)
+      .then(response => {
+        if (response) {
+          removeFromUI(frontendUserId);
+        }
+      })
+      .catch(error => {
+        console.error('Error deleting user:', error);
+      });
+  }
+  
+  // Main function to fetch data and populate the DOM
+  function main() {
+    fetchUserDetails()
+      .then(users => {
+        populateUserList(users);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  
+    // Attach the form submit event listener
+    const userForm = document.getElementById('userForm');
+    userForm.addEventListener('submit', handleFormSubmit);
+  }
+  
+  // Call the main function when the DOM is ready
+  document.addEventListener('DOMContentLoaded', main);
+  
